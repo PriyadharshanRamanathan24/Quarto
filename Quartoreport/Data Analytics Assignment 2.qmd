@@ -1,0 +1,126 @@
+---
+title: "Quarto Assignment 2"
+format: html
+editor: visual
+execute: 
+  echo: false
+  warning: false
+  message: false
+---
+
+# Stats for Unicef Proportion of population using improved latrines and other improved facilities
+
+According to the *World Health Organization (WHO)*, improved sanitation facilities are those that hygienically separate human excreta from human contact, while unimproved sanitation facilities are those that do not.
+
+This indicator is important because it provides information about the level of access to basic sanitation services in a given area. Lack of access to improved sanitation facilities can lead to the spread of diseases and can have a significant impact on public health.
+
+## Population and GDP around the world in 2021
+
+-   The map represents the countries of the world using different shades of blue. The darker the shade, the higher the GDP of the country.
+
+-   Each country is represented by a point on the map, with the size of the point corresponding to the population of the country.
+
+-   The plot allows us to visualize the relationship between a country's GDP and its population.
+
+-   It helps us to identify countries with high GDP and population, such as China, India, and the United States.
+
+-    It also highlights countries with lower GDP and population, such as many African countries.
+
+```{r}
+library(tidyverse)
+unicef_metadata <- read_csv("Priyadharshan/unicef_metadata.csv")
+unicef_indicator_1_ <- read_csv("Priyadharshan/unicef_indicator_1 .csv")
+unicef_metadata_3 <- read_csv("Priyadharshan/unicef_metadata 3.csv")
+```
+
+```{r echo=FALSE}
+world <- map_data("world")
+```
+
+```{r}
+install.packages("sf")
+library(sf)
+install.packages("mapproj")
+library(mapproj)
+```
+
+```{r}
+ggplot() +
+  geom_map(
+    data = world, map = world,
+    aes(map_id = region),
+    color = "black", fill = "lightblue", size = 0.1) +
+ geom_point(
+    data = unicef_metadata,
+    aes(longitude, latitude, color = GDP, size = Population),
+    alpha = 0.8) +
+  theme_minimal() + 
+  labs(title = "Population and GDP around the world",
+       subtitle = "2021",
+       fill = "GDP") +
+  theme(legend.position = "right") 
+
+```
+
+## Proportion of population using improved Latrines and other improved facilities
+
+The proportion of the population using improved latrines and other improved facilities is a measure of the percentage of the population in a country that has access to proper sanitation facilities. This includes facilities that hygienically separate human excreta from human contact and safely dispose of the waste.
+
+### Usage of Improved facilities
+
+-   Access to improved sanitation is essential for public health as it helps to prevent the spread of waterborne diseases, which can be deadly. According to the World Health Organization, inadequate sanitation is responsible for approximately 432,000 diarrheal deaths per year.
+
+-   Improvements in sanitation can have a significant impact on both health and economic outcomes.
+
+-   Better sanitation can reduce healthcare costs, improve educational outcomes by reducing absenteeism, and promote economic growth by increasing productivity and reducing the number of days lost to illness.
+
+-   The proportion of the population using improved latrines and other improved facilities is therefore an important indicator of a country's progress towards achieving sustainable development goals related to public health, education, and economic growth.
+
+```{r echo=FALSE}
+ggplot(unicef_indicator_1_, aes(x=time_period, y=obs_value)) +
+  geom_line(color="red", size=0.5) +
+  ggtitle("Proportion of population using improved latrines and other improved facilities") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  geom_smooth(color="black", size=0.5) +  theme(legend.position = "none")
+```
+
+## GDP and Life expectancy at Birth
+
+GDP and life expectancy are two important indicators that provide insights into the well-being of a country's population. GDP measures the economic output of a country, while life expectancy measures the average lifespan of its citizens. While there is no direct causal relationship between the two, there is a strong correlation between higher GDP and higher life expectancy. Countries with higher GDP tend to have better access to healthcare, education, and basic necessities such as clean water and food, which can contribute to longer lifespans. In contrast, countries with lower GDP often struggle to provide these basic necessities, which can lead to lower life expectancy rates. Therefore, investing in economic growth and development can have positive impacts on the health and well-being of a population.
+
+```{r}
+df <- unicef_metadata_3[c("Life expectancy at birth, total (years)", "GDP per capita (constant 2015 US$)")]
+
+# fit a linear regression model
+df <- na.omit(df)
+fit <- lm(`Life expectancy at birth, total (years)` ~ `GDP per capita (constant 2015 US$)`, data = unicef_metadata_3)
+
+# plot the data and the regression line
+plot(df$`GDP per capita (constant 2015 US$)`, df$`Life expectancy at birth, total (years)`, main = "Scatter plot", xlab = "GDP", ylab = "Life expectancy")
+abline(fit, col = "red")
+
+```
+
+## GDP and Population in 2021
+
+In 2021, the global GDP continued to grow, with several countries showing significant increases in their economic output. The United States remained the largest economy in the world, followed by China and Japan. Other countries, such as India and Brazil, also demonstrated notable economic growth. At the same time, the global population continued to increase, with several countries, including China and India, accounting for a significant portion of this growth. These countries also had the highest populations in the world. With such significant population growth, it is crucial for countries to prioritize sustainable economic growth that supports the well-being of their citizens while also considering the environmental impact of economic activities.
+
+```{r}
+pop <- subset(unicef_metadata, year == 2021)
+# Select the top 10 countries by population
+top_10 <- head(pop[order(pop["Population"], decreasing=TRUE),], 11)
+
+# Remove a specific row by label
+top_10 <- top_10[-9, ]
+# Convert country to factor with order
+top_10$country <- factor(top_10$country, levels = top_10$country)
+
+ggplot(top_10, aes(x = country, y = `GDP`, fill = country)) +
+  geom_bar(stat = "identity", width = 0.5, color = "black") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(title = "Top 10 Countries by Population in 2021",
+       x = "Country",
+       y = "GDP per capita (constant 2015 US$)") +
+  scale_fill_brewer(palette = "Set3")
+
+```
